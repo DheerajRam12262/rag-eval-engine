@@ -1,9 +1,11 @@
 # rag-eval-engine -- developer & reproducibility entrypoints.
-# Everything runs inside the project venv (.venv), created by `make install`.
+# Tooling runs from the project venv when present (.venv, created by `make install`),
+# and falls back to the active interpreter otherwise (e.g. on CI, where deps are installed
+# system-wide). So every target works both locally and in CI.
 
 VENV := .venv
-PY   := $(VENV)/bin/python
-PIP  := $(VENV)/bin/pip
+BIN  := $(shell [ -x $(VENV)/bin/python ] && echo $(VENV)/bin/ )
+PY   := $(BIN)python
 
 .DEFAULT_GOAL := help
 .PHONY: help install lint format typecheck test cov ci ingest serve eval smoke-eval repro plots clean
@@ -14,37 +16,37 @@ help: ## Show this help.
 
 install: ## Create venv and install the package (editable) with dev extras.
 	python3 -m venv $(VENV)
-	$(PIP) install --upgrade pip
-	$(PIP) install -e ".[dev]"
+	$(VENV)/bin/pip install --upgrade pip
+	$(VENV)/bin/pip install -e ".[dev]"
 
 lint: ## ruff + black --check (no changes).
-	$(VENV)/bin/ruff check src tests
-	$(VENV)/bin/black --check src tests
+	$(BIN)ruff check src tests scripts
+	$(BIN)black --check src tests scripts
 
 format: ## Auto-fix lint + format.
-	$(VENV)/bin/ruff check --fix src tests
-	$(VENV)/bin/black src tests
+	$(BIN)ruff check --fix src tests scripts
+	$(BIN)black src tests scripts
 
 typecheck: ## mypy (strict, src only).
-	$(VENV)/bin/mypy
+	$(BIN)mypy
 
 test: ## Run the test suite.
-	$(VENV)/bin/pytest
+	$(BIN)pytest
 
 cov: ## Run tests with coverage report.
-	$(VENV)/bin/pytest --cov=rag_eval --cov-report=term-missing
+	$(BIN)pytest --cov=rag_eval --cov-report=term-missing
 
 ci: lint typecheck test ## Everything CI runs, locally.
 
-# ---- Pipeline (Phase 1+) ----
+# ---- Pipeline ----
 ingest: ## Build dense + BM25 indexes from the corpus.
 	$(PY) -m rag_eval.cli ingest --config config/base.yaml
 
-serve: ## Run the FastAPI service (Phase 6).
-	$(VENV)/bin/uvicorn rag_eval.api.app:app --reload --port 8000
+serve: ## Run the FastAPI service.
+	$(BIN)uvicorn rag_eval.api.app:app --reload --port 8000
 
-# ---- Evaluation (Phase 4+) ----
-eval: ## Run the full eval harness for the base config.
+# ---- Evaluation ----
+eval: ## Run the eval harness for the base config.
 	$(PY) -m rag_eval.cli eval --config config/base.yaml
 
 smoke-eval: ## Regression gate: run the smoke eval and fail if key metrics regress.
@@ -53,7 +55,7 @@ smoke-eval: ## Regression gate: run the smoke eval and fail if key metrics regre
 plots: ## Regenerate result plots from eval/results/.
 	$(PY) -m rag_eval.cli plots
 
-repro: install ## One command to rebuild indexes and reproduce the README metrics table.
+repro: ## Rebuild indexes and reproduce the README ablation table + plots.
 	$(PY) -m rag_eval.cli ingest --config config/base.yaml
 	$(PY) -m rag_eval.cli ablate --suite config/variants --out eval/results
 
