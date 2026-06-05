@@ -1,0 +1,12 @@
+{"id": "dev-001", "question": "Who created the Python programming language?", "reference_answer": "Guido van Rossum created Python.", "relevant_doc_ids": ["doc-001"]}
+{"id": "dev-002", "question": "How does Rust guarantee memory safety without a garbage collector?", "reference_answer": "Through an ownership model with a borrow checker enforced at compile time.", "relevant_doc_ids": ["doc-002"]}
+{"id": "dev-003", "question": "Who created JavaScript and in what year?", "reference_answer": "Brendan Eich created JavaScript in 1995.", "relevant_doc_ids": ["doc-003"]}
+{"id": "dev-004", "question": "What is SQL used for?", "reference_answer": "Managing and querying data in relational databases.", "relevant_doc_ids": ["doc-004"]}
+{"id": "dev-005", "question": "Who created Git and for what purpose?", "reference_answer": "Linus Torvalds created Git to manage development of the Linux kernel.", "relevant_doc_ids": ["doc-005"]}
+{"id": "dev-006", "question": "What does HTTPS add to HTTP?", "reference_answer": "Encryption using TLS to secure the connection.", "relevant_doc_ids": ["doc-006"]}
+{"id": "dev-007", "question": "What does the Transmission Control Protocol provide?", "reference_answer": "Reliable, ordered delivery of data.", "relevant_doc_ids": ["doc-007"]}
+{"id": "dev-008", "question": "What does photosynthesis produce from carbon dioxide and water?", "reference_answer": "Glucose and oxygen.", "relevant_doc_ids": ["doc-008"]}
+{"id": "dev-009", "question": "What are mitochondria commonly called?", "reference_answer": "The powerhouse of the cell.", "relevant_doc_ids": ["doc-009"]}
+{"id": "dev-na-1", "question": "What is the capital of the fictional country of Genovia?", "reference_answer": "", "relevant_doc_ids": [], "no_answer": true}
+{"id": "dev-na-2", "question": "Who won the 2050 FIFA World Cup?", "reference_answer": "", "relevant_doc_ids": [], "no_answer": true}
+{"id": "dev-na-3", "question": "What programming language did Cleopatra invent?", "reference_answer": "", "relevant_doc_ids": [], "no_answer": true}

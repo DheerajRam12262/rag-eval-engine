@@ -1,0 +1,22 @@
+{"id": "test-001", "question": "Who described the double-helix structure of DNA and when?", "reference_answer": "James Watson and Francis Crick, in 1953.", "relevant_doc_ids": ["doc-010"]}
+{"id": "test-002", "question": "What is Newton's third law of motion?", "reference_answer": "For every action there is an equal and opposite reaction.", "relevant_doc_ids": ["doc-011"]}
+{"id": "test-003", "question": "How does general relativity describe gravity?", "reference_answer": "As the curvature of spacetime caused by mass.", "relevant_doc_ids": ["doc-012"]}
+{"id": "test-004", "question": "What is the boundary of a black hole called?", "reference_answer": "The event horizon.", "relevant_doc_ids": ["doc-013"]}
+{"id": "test-005", "question": "How does the Sun generate its energy?", "reference_answer": "By nuclear fusion of hydrogen into helium in its core.", "relevant_doc_ids": ["doc-014"]}
+{"id": "test-006", "question": "What are the two moons of Mars called?", "reference_answer": "Phobos and Deimos.", "relevant_doc_ids": ["doc-015"]}
+{"id": "test-007", "question": "What is the Great Red Spot on Jupiter?", "reference_answer": "A giant storm that has raged for centuries.", "relevant_doc_ids": ["doc-016"]}
+{"id": "test-008", "question": "Why does the Moon always show the same face to Earth?", "reference_answer": "Because its rotation period equals its orbital period.", "relevant_doc_ids": ["doc-017"]}
+{"id": "test-009", "question": "What happens to water after it evaporates in the water cycle?", "reference_answer": "It condenses into clouds and falls back as precipitation.", "relevant_doc_ids": ["doc-018"]}
+{"id": "test-010", "question": "What do interactions between tectonic plates cause?", "reference_answer": "Earthquakes, volcanic eruptions, and mountain ranges.", "relevant_doc_ids": ["doc-019"]}
+{"id": "test-011", "question": "When did the French Revolution begin?", "reference_answer": "In 1789.", "relevant_doc_ids": ["doc-020"]}
+{"id": "test-012", "question": "During which years was World War II fought?", "reference_answer": "From 1939 to 1945.", "relevant_doc_ids": ["doc-021"]}
+{"id": "test-013", "question": "What is the Roman Empire remembered for?", "reference_answer": "Its engineering, law, and the spread of Latin.", "relevant_doc_ids": ["doc-022"]}
+{"id": "test-014", "question": "Who introduced the printing press to Europe?", "reference_answer": "Johannes Gutenberg, around 1440.", "relevant_doc_ids": ["doc-023"]}
+{"id": "test-015", "question": "How does caffeine make people feel more alert?", "reference_answer": "By blocking adenosine, a chemical that promotes sleep.", "relevant_doc_ids": ["doc-024"]}
+{"id": "test-016", "question": "How do vaccines protect against disease?", "reference_answer": "They train the immune system to produce antibodies against pathogens.", "relevant_doc_ids": ["doc-025"]}
+{"id": "test-017", "question": "What does Ohm's law state?", "reference_answer": "Current is proportional to voltage and inversely proportional to resistance.", "relevant_doc_ids": ["doc-026"]}
+{"id": "test-018", "question": "Where is the Great Barrier Reef located?", "reference_answer": "Off the coast of Queensland, Australia.", "relevant_doc_ids": ["doc-027"]}
+{"id": "test-019", "question": "Who first reached the summit of Mount Everest?", "reference_answer": "Edmund Hillary and Tenzing Norgay, in 1953.", "relevant_doc_ids": ["doc-028"]}
+{"id": "test-na-1", "question": "What is the current price of Bitcoin in US dollars?", "reference_answer": "", "relevant_doc_ids": [], "no_answer": true}
+{"id": "test-na-2", "question": "What is the recipe for a chocolate souffle?", "reference_answer": "", "relevant_doc_ids": [], "no_answer": true}
+{"id": "test-na-3", "question": "How many people live in the largest city on the planet Neptune?", "reference_answer": "", "relevant_doc_ids": [], "no_answer": true}
