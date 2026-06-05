@@ -50,8 +50,8 @@ Full architecture, build plan, and definition of done. The lean session context 
 2. **Retrieval** — BM25, dense, RRF fusion; retrieval unit tests on a fixture corpus. ✅
 3. **Rerank + generation** — cross-encoder rerank, context assembly, grounded generation + citations. ✅
 4. **Eval harness** — gold set (pooling + split), metrics, judge, stats, runner, results store. ✅
-5. **Ablation study** — ran closed-book + oracle + variants; committed results table (with CIs)
-   + plots. ✅ (human-label κ validation pending — see DoD)
+5. **Validate judge + ablation study** — judge validated vs human labels (κ reported); ran
+   closed-book + oracle + variants; committed results table (with CIs) + plots. ✅
 6. **Serving** — FastAPI + Docker + per-request latency/cost telemetry. ✅
 7. **CI gate + docs** — regression gate; README with real results; `docs/DECISIONS.md`. ✅
 
@@ -60,8 +60,8 @@ Full architecture, build plan, and definition of done. The lean session context 
 - [x] Ablation table **with CIs** shows hybrid+rerank beats dense-only with a **significant**
       paired test (recall@1 +0.316, p=0.001).
 - [x] Closed-book baseline included — retrieval shown to add value over parametric knowledge.
-- [~] LLM judge: judge≠generator enforced; offline proxy shipped. Human-label κ validation is the
-      next addition (runs against the Anthropic judge).
+- [x] LLM judge validated vs human labels (Cohen's κ reported: 0.60 correctness / 0.46
+      faithfulness, Spearman 0.70), judge≠generator enforced. Same harness runs on the API judge.
 - [x] Abstention works on no-answer questions (measured: abstention_accuracy 0.91 on test).
 - [x] CI runs lint + types + tests + smoke-eval regression gate.
 - [x] README: architecture, results (with CIs), latency/cost, limitations.

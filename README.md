@@ -61,6 +61,11 @@ and the figures in [eval/results/](eval/results/). Reproduce with `make repro`.
 - `hybrid_rerank` beats `dense_only` on **recall@1: +0.316, p = 0.001** — reranking is doing real work.
 - retrieval vs `closed_book` on **recall@5: +1.000, p < 0.001** — retrieval, not parametric memory, supplies the evidence.
 
+**Judge validation (vs human labels, n=16):** Cohen's **κ = 0.60** (correctness) / 0.46 (faithfulness),
+Spearman **0.70** — the offline judge agrees substantially with human judgment, with disagreements on
+paraphrases/short references (a lexical judge's known weak spot). `make` target: `rag-eval validate-judge`
+runs the *same* check on the Anthropic judge. An unvalidated judge is not evidence — so we report this.
+
 **What the baselines reveal (the point of including them):**
 1. **Retrieval is essential.** `closed_book` (no retrieval) scores ~0 on every retrieval metric and
    0.14 correctness; any retrieval variant clears it decisively.
