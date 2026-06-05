@@ -1,0 +1,6 @@
+{
+  "recall@5": 0.95,
+  "faithfulness": 0.99,
+  "correctness": 0.25,
+  "abstention_accuracy": 0.85
+}

@@ -47,8 +47,8 @@ serve: ## Run the FastAPI service (Phase 6).
 eval: ## Run the full eval harness for the base config.
 	$(PY) -m rag_eval.cli eval --config config/base.yaml
 
-smoke-eval: ## Fast eval used by the CI regression gate (Phase 7).
-	$(PY) -m rag_eval.cli eval --config config/base.yaml --smoke
+smoke-eval: ## Regression gate: run the smoke eval and fail if key metrics regress.
+	$(PY) scripts/check_regression.py
 
 plots: ## Regenerate result plots from eval/results/.
 	$(PY) -m rag_eval.cli plots
