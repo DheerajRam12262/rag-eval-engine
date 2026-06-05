@@ -3,9 +3,10 @@
 *.env
 !.env.example
 
-# Data: never commit raw corpora or built indexes (rebuilt by scripts)
-/data/
-!/data/.gitkeep
+# Data: ignore downloaded corpora + built indexes, but COMMIT the small sample corpus
+# (data/sample/) so the offline pipeline + CI run with no network.
+/data/*
+!/data/sample/
 
 # Eval cache (judge/LLM responses are cached but local; results table IS committed)
 /eval/cache/
