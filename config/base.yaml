@@ -5,7 +5,7 @@ seed: 42
 
 corpus:
   name: sample            # loader key (see ingest/loaders.py); sample ships in the repo
-  path: data/corpus
+  path: data/sample       # committed JSONL corpus (data/sample/corpus.jsonl)
 
 chunking:
   strategy: recursive     # fixed | recursive | semantic  (ABLATION VARIABLE)
