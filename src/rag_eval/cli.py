@@ -46,6 +46,10 @@ def build_parser() -> argparse.ArgumentParser:
     pl = subparsers.add_parser("plots", help="Regenerate plots from saved result JSONs.")
     pl.add_argument("--out", default="eval/results", help="Directory of result JSONs.")
 
+    vj = subparsers.add_parser("validate-judge", help="Validate the judge against human labels.")
+    vj.add_argument("--config", default="config/base.yaml", help="Path to a config YAML.")
+    vj.add_argument("--labels", default="eval/judge_labels.jsonl", help="Human-labeled examples.")
+
     return parser
 
 
@@ -162,6 +166,19 @@ def _cmd_ablate(suite_dir: str, gold_path: str, split: str, out_dir: str) -> int
     return 0
 
 
+def _cmd_validate_judge(config_path: str, labels_path: str) -> int:
+    from rag_eval.config import load_config
+    from rag_eval.eval.judge import get_judge
+    from rag_eval.eval.validate import format_agreement, load_labels, validate_judge
+
+    config = load_config(config_path)
+    judge = get_judge(config.eval.judge)
+    report = validate_judge(judge, load_labels(labels_path))
+    print(f"judge backend: {config.eval.judge.provider} ({config.eval.judge.model})")
+    print(format_agreement(report))
+    return 0
+
+
 def _cmd_plots(out_dir: str) -> int:
     from pathlib import Path
 
@@ -203,6 +220,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_ablate(args.suite, args.gold, args.split, args.out)
     if args.command == "plots":
         return _cmd_plots(args.out)
+    if args.command == "validate-judge":
+        return _cmd_validate_judge(args.config, args.labels)
 
     # argparse rejects unknown commands before we get here; this guards future additions.
     print(f"unknown command: {args.command!r}", file=sys.stderr)

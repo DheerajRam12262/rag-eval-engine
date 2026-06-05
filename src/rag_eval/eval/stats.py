@@ -94,7 +94,7 @@ def paired_bootstrap_test(
     return PairedTest(diff_mean=float(diff.mean()), p_value=p_value, n=n)
 
 
-def _average_ranks(values: np.ndarray) -> np.ndarray:
+def average_ranks(values: np.ndarray) -> np.ndarray:
     """1-based ranks with ties resolved to their average rank."""
     order = np.argsort(values, kind="mergesort")
     ranks = np.empty(values.size, dtype=float)
@@ -121,7 +121,7 @@ def wilcoxon_signed_rank(a: Sequence[float], b: Sequence[float]) -> PairedTest:
     n = int(diff.size)
     if n == 0:
         return PairedTest(0.0, 1.0, 0)
-    ranks = _average_ranks(np.abs(diff))
+    ranks = average_ranks(np.abs(diff))
     w_plus = float(ranks[diff > 0].sum())
     w_minus = float(ranks[diff < 0].sum())
     w = min(w_plus, w_minus)
