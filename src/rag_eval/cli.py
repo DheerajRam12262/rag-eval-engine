@@ -37,7 +37,31 @@ def build_parser() -> argparse.ArgumentParser:
     ev.add_argument("--out", default="eval/results", help="Directory for the results JSON.")
     ev.add_argument("--smoke", action="store_true", help="Cap questions for a fast CI smoke eval.")
 
+    ab = subparsers.add_parser("ablate", help="Run an ablation suite and write a table + plots.")
+    ab.add_argument("--suite", default="config/variants", help="Directory of variant configs.")
+    ab.add_argument("--split", default="test", help="Gold split: dev | test | all.")
+    ab.add_argument("--gold", default="eval/gold", help="Path to the gold set.")
+    ab.add_argument("--out", default="eval/results", help="Output directory.")
+
+    pl = subparsers.add_parser("plots", help="Regenerate plots from saved result JSONs.")
+    pl.add_argument("--out", default="eval/results", help="Directory of result JSONs.")
+
     return parser
+
+
+# Conventional display order for the pipeline ablation.
+_ABLATION_ORDER = ["closed_book", "dense_only", "hybrid", "hybrid_rerank", "oracle"]
+_ABLATION_METRICS = [
+    "recall@1",
+    "recall@3",
+    "recall@5",
+    "ndcg@5",
+    "mrr",
+    "faithfulness",
+    "answer_relevance",
+    "correctness",
+    "abstention_accuracy",
+]
 
 
 def _cmd_ingest(config_path: str) -> int:
@@ -72,6 +96,97 @@ def _cmd_eval(config_path: str, split: str, gold_path: str, out_dir: str, smoke:
     return 0
 
 
+def _cmd_ablate(suite_dir: str, gold_path: str, split: str, out_dir: str) -> int:
+    from pathlib import Path
+
+    from rag_eval.config import load_config
+    from rag_eval.eval.gold import load_gold
+    from rag_eval.eval.plots import plot_metric_bars, plot_recall_grouped
+    from rag_eval.eval.results import compare, markdown_table, save_report
+    from rag_eval.eval.runner import run_eval
+    from rag_eval.ingest.indexer import build_index, index_signature
+
+    configs = [load_config(p) for p in sorted(Path(suite_dir).glob("*.yaml"))]
+    configs.sort(
+        key=lambda c: _ABLATION_ORDER.index(c.name) if c.name in _ABLATION_ORDER else len(configs)
+    )
+    gold = load_gold(gold_path)
+    out = Path(out_dir)
+
+    bundles: dict[str, object] = {}
+    reports = []
+    for cfg in configs:
+        sig = index_signature(cfg)
+        if sig not in bundles:
+            bundles[sig] = build_index(cfg, persist=False)
+        rep = run_eval(
+            cfg, gold, bundle=bundles[sig], split=None if split == "all" else split  # type: ignore[arg-type]
+        )
+        reports.append(rep)
+        save_report(rep, out / f"{cfg.name}.json")
+
+    table = markdown_table(reports, _ABLATION_METRICS)
+    by_name = {r.config_name: r for r in reports}
+    lines = [
+        "# Ablation results",
+        "",
+        f"Backend: offline (deterministic). Split: `{split}`. Cells: `mean [95% CI]` (bootstrap).",
+        "",
+        table,
+        "",
+        "## Significance (paired bootstrap, per-question)",
+        "",
+    ]
+    if {"hybrid_rerank", "dense_only"} <= by_name.keys():
+        for m in ("recall@1", "recall@3", "correctness"):
+            c = compare(by_name["hybrid_rerank"], by_name["dense_only"], m)
+            verdict = "significant" if c.p_value < 0.05 else "n.s."
+            lines.append(
+                f"- **hybrid_rerank vs dense_only** on `{m}`: "
+                f"diff={c.diff_mean:+.3f}, p={c.p_value:.4f} (n={c.n}) — {verdict}"
+            )
+    if {"hybrid_rerank", "closed_book"} <= by_name.keys():
+        c = compare(by_name["hybrid_rerank"], by_name["closed_book"], "recall@5")
+        lines.append(
+            f"- **retrieval vs closed-book** on `recall@5`: "
+            f"diff={c.diff_mean:+.3f}, p={c.p_value:.4f} (n={c.n})"
+        )
+    report_md = "\n".join(lines)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "ablation.md").write_text(report_md + "\n")
+    plot_recall_grouped(reports, [1, 3, 5], out / "ablation_recall.png")
+    plot_metric_bars(reports, "correctness", out / "ablation_correctness.png")
+
+    print(report_md)
+    print(f"\nwrote {out}/ablation.md, ablation_recall.png, ablation_correctness.png")
+    return 0
+
+
+def _cmd_plots(out_dir: str) -> int:
+    from pathlib import Path
+
+    from rag_eval.eval.plots import plot_metric_bars, plot_recall_grouped
+    from rag_eval.eval.results import load_report
+
+    out = Path(out_dir)
+    paths = sorted(p for p in out.glob("*.json"))
+    if not paths:
+        print(f"no result JSONs in {out}; run `rag-eval ablate` first")
+        return 1
+    reports = [load_report(p) for p in paths]
+    reports.sort(
+        key=lambda r: (
+            _ABLATION_ORDER.index(r.config_name)
+            if r.config_name in _ABLATION_ORDER
+            else len(reports)
+        )
+    )
+    plot_recall_grouped(reports, [1, 3, 5], out / "ablation_recall.png")
+    plot_metric_bars(reports, "correctness", out / "ablation_correctness.png")
+    print(f"regenerated plots in {out}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the CLI. Returns a process exit code."""
     parser = build_parser()
@@ -84,6 +199,10 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_ingest(args.config)
     if args.command == "eval":
         return _cmd_eval(args.config, args.split, args.gold, args.out, args.smoke)
+    if args.command == "ablate":
+        return _cmd_ablate(args.suite, args.gold, args.split, args.out)
+    if args.command == "plots":
+        return _cmd_plots(args.out)
 
     # argparse rejects unknown commands before we get here; this guards future additions.
     print(f"unknown command: {args.command!r}", file=sys.stderr)

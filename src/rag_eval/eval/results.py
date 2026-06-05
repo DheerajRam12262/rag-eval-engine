@@ -9,11 +9,15 @@ from pathlib import Path
 from typing import Any
 
 from rag_eval.eval.runner import EvalReport
-from rag_eval.eval.stats import PairedTest, paired_bootstrap_test
+from rag_eval.eval.stats import Estimate, PairedTest, paired_bootstrap_test
 
 
 def _nan_to_none(x: float) -> float | None:
     return None if math.isnan(x) else x
+
+
+def _none_to_nan(x: float | None) -> float:
+    return math.nan if x is None else x
 
 
 def report_to_dict(report: EvalReport) -> dict[str, Any]:
@@ -44,6 +48,32 @@ def save_report(report: EvalReport, path: str | Path) -> Path:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report_to_dict(report), indent=2, sort_keys=True))
     return out
+
+
+def load_report(path: str | Path) -> EvalReport:
+    """Reconstruct an EvalReport from a saved JSON file (records are not restored)."""
+    data = json.loads(Path(path).read_text())
+    metrics = {
+        name: Estimate(
+            _none_to_nan(m["mean"]), _none_to_nan(m["ci_low"]), _none_to_nan(m["ci_high"]), m["n"]
+        )
+        for name, m in data["metrics"].items()
+    }
+    per_question = {
+        name: {qid: _none_to_nan(v) for qid, v in values.items()}
+        for name, values in data["per_question"].items()
+    }
+    operational = {k: _none_to_nan(v) for k, v in data["operational"].items()}
+    return EvalReport(
+        config_name=data["config_name"],
+        split=data["split"],
+        seed=data["seed"],
+        n_questions=data["n_questions"],
+        metrics=metrics,
+        per_question=per_question,
+        operational=operational,
+        records=[],
+    )
 
 
 def aligned_values(a: EvalReport, b: EvalReport, metric: str) -> tuple[list[float], list[float]]:
