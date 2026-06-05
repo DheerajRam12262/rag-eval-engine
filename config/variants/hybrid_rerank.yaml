@@ -1,0 +1,11 @@
+# The full pipeline: hybrid retrieval (BM25 + dense, RRF) + cross-encoder rerank.
+# This is the variant the README headline numbers come from.
+extends: base
+name: hybrid_rerank
+retrieval:
+  bm25:
+    enabled: true
+  dense:
+    enabled: true
+  rerank:
+    enabled: true

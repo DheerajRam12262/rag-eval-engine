@@ -1,0 +1,54 @@
+# Base pipeline configuration. Every number in the README is produced by a config like this
+# (or a variant in config/variants/ that `extends: base`). No magic numbers live in code.
+name: base
+seed: 42
+
+corpus:
+  name: sample            # loader key (see ingest/loaders.py); sample ships in the repo
+  path: data/corpus
+
+chunking:
+  strategy: recursive     # fixed | recursive | semantic  (ABLATION VARIABLE)
+  chunk_size: 256         # tokens (approx, whitespace-tokenised)
+  chunk_overlap: 32
+
+embedder:
+  backend: hashing        # hashing (offline, deterministic) | sentence-transformers
+  model: BAAI/bge-base-en-v1.5   # only used by the sentence-transformers backend
+  dim: 256                # vector dim for the hashing backend
+
+vector_store:
+  backend: memory         # memory (exact NN, offline) | qdrant
+
+retrieval:
+  candidate_k: 20         # candidates pulled from each retriever before fusion/rerank
+  top_k: 5                # final chunks passed to the generator  (ABLATION VARIABLE)
+  bm25:
+    enabled: true
+  dense:
+    enabled: true
+  fusion:
+    method: rrf           # reciprocal rank fusion
+    rrf_k: 60             # RRF damping constant
+  rerank:
+    enabled: true
+    backend: lexical      # lexical (offline) | cross-encoder
+    model: cross-encoder/ms-marco-MiniLM-L-6-v2
+
+generation:
+  provider: offline       # offline (extractive, deterministic) | anthropic | openai
+  model: claude-sonnet-4-6
+  max_context_chunks: 5
+  abstain_threshold: 0.15 # below this top retrieval score, the system abstains
+
+eval:
+  metrics:
+    k_values: [1, 3, 5, 10]
+  judge:
+    provider: offline     # offline (lexical-grounding proxy) | anthropic | openai
+    model: claude-opus-4-8   # NOTE: judge model differs from generation model on purpose
+  bootstrap:
+    iterations: 1000
+    confidence: 0.95
+  smoke:
+    max_questions: 20     # questions used by `make smoke-eval` in CI

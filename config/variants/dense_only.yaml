@@ -1,0 +1,10 @@
+# Dense-only retrieval, no sparse signal, no rerank. The "naive RAG" baseline.
+extends: base
+name: dense_only
+retrieval:
+  bm25:
+    enabled: false
+  dense:
+    enabled: true
+  rerank:
+    enabled: false

@@ -1,0 +1,10 @@
+# Hybrid retrieval (BM25 + dense, RRF fused) but no reranker.
+extends: base
+name: hybrid
+retrieval:
+  bm25:
+    enabled: true
+  dense:
+    enabled: true
+  rerank:
+    enabled: false

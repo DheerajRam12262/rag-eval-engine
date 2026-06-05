@@ -1,0 +1,11 @@
+# Baseline that proves retrieval adds value over the LLM's parametric knowledge.
+# No retrieval at all: the generator answers from the question alone.
+extends: base
+name: closed_book
+retrieval:
+  bm25:
+    enabled: false
+  dense:
+    enabled: false
+  rerank:
+    enabled: false

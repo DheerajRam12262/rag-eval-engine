@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-eval-engine"
+version = "0.1.0"
+description = "Hybrid-retrieval RAG service with a rigorous, reproducible evaluation harness that gates regressions in CI."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Siva Rama Dheeraj Lagudu" }]
+keywords = ["rag", "retrieval", "evaluation", "llm", "information-retrieval"]
+
+# Pins are exact and reproducible: captured from a real resolved install (see `make repro`).
+# Core stays lean so the whole pipeline + eval harness runs offline, no GPU, no API key.
+dependencies = [
+    "numpy==2.4.6",
+    "PyYAML==6.0.3",
+    "pydantic==2.13.4",
+    "rank-bm25==0.2.2",
+    "fastapi==0.136.3",
+    "uvicorn==0.49.0",
+    "httpx==0.28.1",
+    "matplotlib==3.10.9",
+]
+
+[project.optional-dependencies]
+# Real production backends, deliberately NOT installed by default (heavy / need a service or key).
+# The offline reference implementations make these optional; adapters live behind these extras.
+embeddings = ["sentence-transformers>=3,<5", "torch>=2,<3"]
+qdrant = ["qdrant-client>=1.9,<2"]
+llm = ["anthropic>=0.40,<1", "openai>=1.40,<2"]
+dev = [
+    "pytest==9.0.3",
+    "pytest-cov==7.1.0",
+    "ruff==0.15.16",
+    "black==26.5.1",
+    "mypy==2.1.0",
+    "types-PyYAML==6.0.12.20260518",
+]
+
+[project.scripts]
+rag-eval = "rag_eval.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4", "PIE", "RET", "PTH"]
+ignore = ["E501"]  # line length is enforced by black, not ruff
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src/rag_eval"]
+warn_unreachable = true
+pretty = true
+
+[[tool.mypy.overrides]]
+module = ["rank_bm25.*", "matplotlib.*", "sentence_transformers.*", "qdrant_client.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q --strict-markers"
+testpaths = ["tests"]
+markers = [
+    "integration: end-to-end tests that exercise the full pipeline (still offline).",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["rag_eval"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

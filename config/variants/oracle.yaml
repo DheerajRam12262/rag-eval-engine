@@ -1,0 +1,8 @@
+# Upper bound: feed the gold-relevant chunks directly to the generator.
+# Isolates GENERATION quality from RETRIEVAL quality.
+extends: base
+name: oracle
+retrieval:
+  mode: oracle           # runner short-circuits retrieval and uses gold chunk ids
+  rerank:
+    enabled: false
