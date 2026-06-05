@@ -34,17 +34,67 @@ snapshot alongside the cache so staleness is visible.
 
 ---
 
-## Seeds for upcoming entries (write these as the phases land)
-- **D3 — Hybrid + RRF over dense-only.** Why reciprocal rank fusion (rank-based, score-scale
-  agnostic) instead of score normalization; what `rrf_k` controls.
-- **D4 — Validating the LLM judge.** Judge model ≠ generator model (self-preference bias);
-  report Cohen's κ / Spearman vs a human-labeled subset; position/verbosity-bias mitigation.
-- **D5 — Statistical rigor.** Why a bare mean is not evidence; bootstrap CIs over the question
-  set; paired bootstrap / Wilcoxon for "A beats B"; effect size.
-- **D6 — Gold set via pooling.** Labeling relevance from a single retriever biases recall; pool
-  the top-k of all variants, label the union; dev/test split to avoid overfitting the harness.
-- **D7 — Closed-book + oracle baselines.** Closed-book proves retrieval beats parametric memory;
-  oracle isolates generation quality from retrieval quality.
-- **D8 — Latency/quality/cost tradeoff per stage.** Where the cross-encoder spends its budget.
-- **What changes at 10M docs.** ANN index (HNSW/IVF) + sharding, recall/latency tradeoff, reranker
-  cost, cache strategy; how to A/B test a retrieval change in production.
+## D3 — Hybrid + RRF over dense-only
+**Decision.** Fuse BM25 and dense with Reciprocal Rank Fusion (`score = Σ 1/(rrf_k + rank)`)
+rather than normalizing and adding scores.
+
+**Why.** BM25 and cosine live on different, unbounded scales; min-max/z-score normalization is
+brittle and corpus-dependent. RRF uses only ranks, so it is scale-agnostic and has one
+interpretable knob (`rrf_k`, which flattens the influence of top ranks).
+
+**Tradeoff.** RRF discards score magnitude — a weakly-relevant rank-1 counts like a strongly
+relevant one. The cross-encoder reranker restores precision on the fused candidates. **Evidence:**
+`hybrid` lifts recall@1 over `dense_only` (0.68→0.79), and `hybrid_rerank` reaches 1.00
+(+0.316 vs dense, paired bootstrap p=0.001).
+
+## D4 — Validating and de-biasing the LLM judge
+**Decision.** Judge model MUST differ from the generator (enforced by a config validator). Score
+faithfulness/relevance/correctness from a fixed rubric with structured output; cache every call.
+Validate against a human-labeled subset and report Cohen's κ / Spearman before trusting it.
+
+**Why.** A model grading its own output exhibits self-preference bias; an unvalidated judge is not
+evidence. Caching makes the (non-deterministic) judge reproducible.
+
+**Status.** Offline backend uses a deterministic lexical proxy (labeled as such). The human-label
+correlation step runs against the Anthropic judge; the κ harness is the next addition.
+
+## D5 — Statistical rigor
+**Decision.** Never report a bare mean or a single run. Every metric is a bootstrap mean CI over
+the question set; every "A beats B" is a paired bootstrap test (Wilcoxon as a non-parametric
+cross-check) on per-question scores.
+
+**Why.** With n=22, "0.68 vs 1.00" could be noise. The paired test answers whether the
+per-question advantage is real (recall@1: p=0.001 → yes; recall@3: p=0.24 → can't tell at this n).
+
+## D6 — Gold set via pooling + dev/test split
+**Decision.** Relevance is recorded at the document level (survives chunk-size ablations). A
+`pool_candidates` utility unions the top-k of all variants for unbiased labeling. The set is split
+dev/test.
+
+**Why.** Labeling from one retriever's output biases recall toward that retriever. Tuning and
+reporting on the same split overfits the harness. (On this small authored corpus relevance is
+exhaustively known, so pooling is methodological rather than load-bearing — stated honestly.)
+
+## D7 — Closed-book + oracle baselines
+**Decision.** Always include `closed_book` (no retrieval) and `oracle` (gold context) rows.
+
+**Why / evidence.** `closed_book` proves retrieval beats parametric memory (recall 0, correctness
+0.14). `oracle` isolates generation from retrieval — its 0.39 correctness ceiling showed that the
+*extractive generator*, not retrieval, is the bottleneck here (correctness is flat ~0.30 across all
+retrieval variants). Without these baselines you cannot attribute wins to the right component.
+
+## D8 — Latency / quality / cost per stage
+Per-stage telemetry (offline, warm): retrieve ≈ 0.2–1.3 ms, rerank ≈ 0.25 ms, generate ≈ 0.14 ms.
+With API backends, generation dominates latency and is the only nonzero cost; the cross-encoder
+reranker is the main *local* compute. The harness records p50/p95 latency, tokens, and $/query so
+the quality/latency/cost tradeoff is visible per variant.
+
+## What changes at 10M docs
+- **Vector store:** exact NN (O(N·d)) → ANN (HNSW/IVF-PQ); accept a recall/latency tradeoff and
+  measure it (the harness already reports recall, so the ANN recall hit is quantifiable).
+- **Sharding** the index; BM25 moves to OpenSearch/Elasticsearch.
+- **Reranker cost** grows with candidate depth → cap `candidate_k`, or cascade (cheap filter →
+  cross-encoder on a short list).
+- **Caching:** exact + semantic query caches; precomputed embeddings.
+- **Shipping a retrieval change:** offline eval gate (this harness) → online A/B with
+  interleaving, watching recall proxies, latency p95, and downstream task metrics.
