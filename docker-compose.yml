@@ -1,0 +1,18 @@
+# Brings up the RAG service on :8000 (offline backend, no external services needed).
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - RAG_CONFIG=config/base.yaml
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # A Qdrant service for the production vector-store path is on the roadmap:
+  # qdrant:
+  #   image: qdrant/qdrant:latest
+  #   ports: ["6333:6333"]
