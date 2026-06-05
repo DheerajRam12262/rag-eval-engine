@@ -1,6 +1,10 @@
 # rag-eval-engine
 
-<!-- CI badge is inserted after the first push to GitHub (needs the repo slug). -->
+[![CI](https://github.com/DheerajRam12262/rag-eval-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/DheerajRam12262/rag-eval-engine/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
+[![Checked with mypy](https://img.shields.io/badge/mypy-strict-blue.svg)](https://mypy-lang.org/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > Most RAG systems are *demoed*, not *measured*. **rag-eval-engine** is a hybrid-retrieval RAG
 > service over a non-trivial corpus with a rigorous, reproducible **evaluation harness** that
