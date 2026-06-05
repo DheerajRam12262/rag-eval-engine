@@ -61,8 +61,14 @@ class RagPipeline:
             ]
         return self._retriever.retrieve(query, self._config.retrieval.candidate_k)
 
-    def query(self, text: str, oracle_chunk_ids: list[str] | None = None) -> PipelineResult:
+    def query(
+        self,
+        text: str,
+        oracle_chunk_ids: list[str] | None = None,
+        top_k: int | None = None,
+    ) -> PipelineResult:
         rcfg = self._config.retrieval
+        k = top_k if top_k is not None else rcfg.top_k
         t_start = time.perf_counter()
 
         t = time.perf_counter()
@@ -74,7 +80,7 @@ class RagPipeline:
             ranked = self._reranker.rerank(text, ranked, len(ranked))
         rerank_ms = (time.perf_counter() - t) * 1000.0
 
-        contexts = ranked[: rcfg.top_k]
+        contexts = ranked[:k]
 
         t = time.perf_counter()
         gen = self._generator.generate(text, contexts, self._config.generation.abstain_threshold)
