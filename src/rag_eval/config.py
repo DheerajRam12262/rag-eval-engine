@@ -113,6 +113,19 @@ class Config(BaseModel):
     generation: GenerationConfig
     eval: EvalConfig
 
+    @model_validator(mode="after")
+    def _judge_is_not_the_generator(self) -> Config:
+        """Guard against self-preference bias: an API judge must not be the generator model."""
+        if (
+            self.generation.provider != "offline"
+            and self.eval.judge.provider == self.generation.provider
+            and self.eval.judge.model == self.generation.model
+        ):
+            raise ValueError(
+                "eval.judge.model must differ from generation.model to avoid self-preference bias"
+            )
+        return self
+
 
 def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
     """Recursively merge ``override`` onto ``base`` without mutating either."""
